@@ -16,14 +16,27 @@ export interface CreatePaymentPayload {
     callback_url?: string;
   };
   payment?: {
-    payment_due_date?: number; // dalam menit
+    payment_due_date?: number;
   };
   additional_info?: {
-    override_notification_url?: string; // Override notification URL di Doku (Callback URL)
+    override_notification_url?: string; // Override notification URL (Callback URL)
   };
 }
 
 export class DokuPaymentService {
+  /**
+   * Generates the headers required for a Doku API request.
+   *
+   * This function constructs the necessary headers, including
+   * the Client-Id, Request-Id, Request-Timestamp, and a computed
+   * HMACSHA256 signature for authenticating the request.
+   *
+   * @param path - The request path used in the signature computation.
+   * @param body - The request body used to compute the digest.
+   * @param requestId - A unique identifier for the request.
+   * @param requestDate - The timestamp of the request.
+   * @returns An object containing the headers for the request.
+   */
   private static getHeaders(
     path: string,
     body: object,
@@ -41,6 +54,19 @@ export class DokuPaymentService {
     };
   }
 
+  /**
+   * Creates a new payment for the given customer and order.
+   *
+   * The customer and order objects must contain the required fields.
+   * The payment object can contain a payment_due_date field
+   * which defaults to 60 minutes. The additional_info object can
+   * contain an override_notification_url field which overrides the
+   * notification URL (callback URL) for this specific payment.
+   *
+   * @param params - The payload to be sent to the Doku API.
+   * @returns The response from the Doku API.
+   * @throws {Error} - If the request fails.
+   */
   static async createPayment(params: CreatePaymentPayload) {
     const path = "/checkout/v1/payment";
     const url = `${DOKU_CONFIG.BASE_URL}${path}`;
